@@ -4,3 +4,6 @@ dist/
 .DS_Store
 .env
 *.tsbuildinfo
+test-media/
+test-library/
+logs/

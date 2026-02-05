@@ -102,7 +102,8 @@ import { logger } from './logger';
     if (!fs.statSync(directory).isDirectory()) {
         throw new Error(`${directory} is not a directory`);
     }
-    fs.rmdirSync(directory, { recursive: true });
+    // 使用 fs.rmSync 替代已弃用的 fs.rmdirSync
+    fs.rmSync(directory, { recursive: true, force: true });
     return {
         success: true,
         message: `目录 ${directory} 删除成功`,

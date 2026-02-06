@@ -1,8 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { logger } from '../logger/logger';
+import { logger } from '@/logger';
 
- function screenFile(directory: string, recursive: boolean = true) {
+export type FileTree = {
+    name: string; // 文件名
+    path: string;
+    type: 'file' | 'directory';
+    children: FileTree[];
+}
+
+function screenFolder(directory: string, recursive: boolean = true) {
     logger.debug(`开始扫描目录: ${directory}, 递归: ${recursive}`);
     if (!fs.existsSync(directory)) {
         logger.error(`目录不存在: ${directory}`);
@@ -13,37 +20,47 @@ import { logger } from '../logger/logger';
         throw new Error(`${directory} is not a directory`);
     }
 
-    const mediaFiles: string[] = [];
     const resolvedDir = path.resolve(directory);
 
-    function scan(currentPath: string) {
-        const items = fs.readdirSync(currentPath);
-        for (const item of items) {
-            const filePath = path.join(currentPath, item);
-            const stat = fs.statSync(filePath);
-
-            if (stat.isDirectory() && recursive) {
-                scan(filePath);
-            } else if (stat.isFile()) {
-                mediaFiles.push(filePath);
-            }
+    function scan(currentPath: string): FileTree {
+        if (!fs.existsSync(currentPath)) {
+            throw new Error(`Path ${currentPath} does not exist`);
         }
+        const name = path.basename(currentPath);
+        const stat = fs.statSync(currentPath);
+        if (stat.isDirectory()) {
+            const children: FileTree[] = [];
+            const items = fs.readdirSync(currentPath);
+            for (const item of items) {
+                const filePath = path.join(currentPath, item);
+                children.push(scan(filePath));
+            }
+            return {
+                name: name,
+                path: currentPath,
+                type: 'directory',
+                children: children,
+            };
+        }
+        return {
+            name: name,
+            path: currentPath,
+            type: 'file',
+            children: [],
+        };
     }
 
-    scan(resolvedDir);
-    logger.debug(`扫描完成，找到 ${mediaFiles.length} 个文件`);
-
+    const fileTree: FileTree = scan(resolvedDir);
     return {
         success: true,
-        count: mediaFiles.length,
-        files: mediaFiles,
+        fileTree: fileTree,
         directory: resolvedDir,
-        message: `成功扫描目录，找到 ${mediaFiles.length} 个媒体文件。扫描任务已完成。`
+        message: `成功扫描目录,扫描任务已完成。`
     };
 }
 
 
- function moveFile(file: string, targetDirectory: string) {
+function moveFile(file: string, targetDirectory: string) {
     if (!fs.existsSync(file)) {
         throw new Error(`File ${file} does not exist`);
     }
@@ -57,7 +74,7 @@ import { logger } from '../logger/logger';
     };
 }
 
- function renameFile(file: string, newName: string) {
+function renameFile(file: string, newName: string) {
     if (!fs.existsSync(file)) {
         throw new Error(`File ${file} does not exist`);
     }
@@ -71,7 +88,7 @@ import { logger } from '../logger/logger';
     };
 }
 
- function deleteFile(file: string) {
+function deleteFile(file: string) {
     if (!fs.existsSync(file)) {
         throw new Error(`File ${file} does not exist`);
     }
@@ -85,7 +102,7 @@ import { logger } from '../logger/logger';
     };
 }
 
- function createDirectory(directory: string) {
+function createDirectory(directory: string) {
     if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory, { recursive: true });
     }
@@ -95,7 +112,7 @@ import { logger } from '../logger/logger';
     };
 }
 
- function deleteDirectory(directory: string) {
+function deleteDirectory(directory: string) {
     if (!fs.existsSync(directory)) {
         throw new Error(`Directory ${directory} does not exist`);
     }
@@ -110,7 +127,7 @@ import { logger } from '../logger/logger';
     };
 }
 
- function renameDirectory(directory: string, newName: string) {
+function renameDirectory(directory: string, newName: string) {
     logger.debug(`重命名目录: ${directory} -> ${newName}`);
     if (!fs.existsSync(directory)) {
         logger.error(`目录不存在: ${directory}`);
@@ -120,7 +137,7 @@ import { logger } from '../logger/logger';
         logger.error(`路径不是目录: ${directory}`);
         throw new Error(`${directory} is not a directory`);
     }
-   
+
     fs.renameSync(directory, path.join(path.dirname(directory), newName));
     return {
         success: true,
@@ -129,7 +146,7 @@ import { logger } from '../logger/logger';
 }
 
 export default {
-    screenFile,
+    screenFolder,
     moveFile,
     renameFile,
     deleteFile,

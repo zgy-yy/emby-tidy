@@ -2,20 +2,34 @@
 import { tool } from "langchain";
 import * as z from "zod";
 import utils from './utils';
-import { logger } from '../logger/logger';
+import { logger } from '@/logger';
 /**
  * 扫描目录中的媒体文件
  */
 export const scanDirectory: any = tool(
     (input: { directory: string; recursive?: boolean }) => {
         logger.info(`扫描目录: ${input.directory}, 递归: ${input.recursive ?? true}`);
-        const result = utils.screenFile(input.directory, input.recursive ?? true);
-        logger.info(`扫描完成，找到 ${result.count} 个文件`);
-        return JSON.stringify(result, null, 2);
+        const result = utils.screenFolder(input.directory, input.recursive ?? true);
+        // 计算文件总数
+        function countFiles(tree: any): number {
+            if (tree.type === 'file') {
+                return 1;
+            }
+            let count = 0;
+            if (tree.children) {
+                for (const child of tree.children) {
+                    count += countFiles(child);
+                }
+            }
+            return count;
+        }
+        const fileCount = result.fileTree ? countFiles(result.fileTree) : 0;
+        logger.info(`扫描完成，找到 ${fileCount} 个文件`);
+        return JSON.stringify({ ...result, count: fileCount }, null, 2);
     },
     {
         name: "scan_directory",
-        description: "扫描指定目录中的所有媒体文件（视频文件）。扫描完成后会返回文件路径列表。这是一个一次性操作，扫描完成后任务就结束了，不需要再次调用。",
+        description: "扫描指定目录中的所有文件（包括文件和子目录）。返回完整的文件树结构。注意：每个目录只扫描一次，扫描完成后根据结果决定下一步操作，不要重复扫描。",
         schema: z.object({
             directory: z.string().describe("要扫描的目录路径（可以是相对路径或绝对路径）"),
             recursive: z.boolean().optional().describe("是否递归扫描子目录，默认为 true"),

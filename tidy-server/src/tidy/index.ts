@@ -85,7 +85,7 @@ export async function aiExecutor(messages: string) {
                     // 记录日志
                     logger.info('Agent 流数据块:', JSON.stringify(chunk, null, 2));
                     // 将数据推送到新流（对象模式可以推送对象）
-                    newStream.push(chunk);
+                    newStream.push(chunk.content);
                 }
                 // 流结束
                 newStream.push(null);

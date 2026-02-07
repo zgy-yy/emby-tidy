@@ -11,7 +11,7 @@ export class WatchController {
         return this.watchService.watchDirectory(body.directory);
     }
 
-    @Get('watchs')
+    @Get('all')
     getWatchDirectories() {
         return this.watchService.catWatchDirectories();
     }

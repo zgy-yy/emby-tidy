@@ -1,17 +1,22 @@
 import log4js from 'log4js';
 import * as path from 'path';
 import * as fs from 'fs';
+import { getConfig } from '@/config';
 
 /**
- * 从环境变量读取配置
+ * 从环境变量和配置文件读取日志配置
+ * 注意：这里不能直接导入 @/config，因为会造成循环依赖
+ * 所以先尝试从配置文件读取，如果失败则使用环境变量或默认值
  */
 function getLoggerConfig() {
-    const logLevel = 'INFO';
-    // 默认启用文件日志，除非明确设置为 false
-    const logToFile = true;
-    const logDir = './logs';
+    // 根据环境变量判断是否为生产环境（Docker）
+    const logConfig = getConfig().log;
+
+    const logLevel = logConfig.level || 'INFO';
+    const logToFile = logConfig.toFile !== false; // 默认启用
+    const logDir = logConfig.logDir;
     const logConsole = true; // 默认为 true
-    
+
     return {
         level: logLevel,
         toFile: logToFile,
@@ -56,7 +61,7 @@ log4js.configure({
     },
     categories: {
         default: {
-            appenders: config.toFile 
+            appenders: config.toFile
                 ? (config.toConsole ? ['console', 'file'] : ['file'])
                 : (config.toConsole ? ['console'] : []),
             level: config.level,

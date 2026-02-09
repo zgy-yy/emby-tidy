@@ -3,12 +3,20 @@ import { AppModule } from './app.module';
 import { logger } from '@/logger';
 import config from '@/config';
 import { ValidationPipe } from '@nestjs/common';
-
+logger.info('config', config);
 logger.info('Starting Tidy Server');
-console.log('config', config);
+
+let production = false;
+if (process.env.NODE_ENV === 'production') {
+  production = true;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  if (production) {
+    app.setGlobalPrefix('api');
+  }
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // 自动删除不在 DTO 中的属性

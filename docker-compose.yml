@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  emby-tidy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: emby-tidy
+    ports:
+      - "3000:3000"
+    volumes:
+      # 映射配置目录
+      - ./config:/app/config
+      # 映射日志目录
+      - ./config/logs:/app/logs
+      # 映射媒体目录
+      - /Volumes/dav.2dland.cn/:/app/media
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - emby-tidy-network
+
+networks:
+  emby-tidy-network:
+    driver: bridge

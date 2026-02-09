@@ -19,16 +19,25 @@ export type Config = {
     }[]
 }
 
-const configPath = path.join(__dirname, 'config.json');
-console.log('__dirname', __dirname);    
-console.log('configPath', configPath);
+// 根据环境变量判断是否为生产环境（Docker）
+// 生产环境：NODE_ENV=production 且存在 /app/config 目录
+// 开发环境：使用相对路径
+const isProduction = process.env.NODE_ENV === 'production';
+const isDocker = isProduction && fs.existsSync('/app/config');
+const configDir = isDocker ? '/app/config' : path.join(__dirname,'..','..','config');
+const configPath = path.join(configDir, 'config.json');
+
 export function getConfig(): Config {
     if (!fs.existsSync(configPath)) {
+        // 根据环境设置默认路径
+        const defaultLogDir = isDocker ? '/app/logs' : path.join(__dirname,'..','..','logs');
+        const defaultMediaPath = isDocker ? '/app/media' : path.join(__dirname,'..','..','media');
+        
         const defaultConfig: Config = {
             log: {
                 level: 'INFO',
                 toFile: true,
-                logDir: './logs',
+                logDir: defaultLogDir,
             },
             ai: {
                 model: 'deepseek-chat',
@@ -37,9 +46,15 @@ export function getConfig(): Config {
                 recursionLimit: 1000, // 默认递归限制为 1000
             },
             folders: [{
-                path: '/Volumes/dav.2dland.cn/test',
+                path: defaultMediaPath,
             }],
         }
+        
+        // 确保配置目录存在
+        if (!fs.existsSync(configDir)) {
+            fs.mkdirSync(configDir, { recursive: true });
+        }
+        
         fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
         return defaultConfig
     }
@@ -51,9 +66,12 @@ export function getConfig(): Config {
 
 export function setConfig(config: Config) {
     console.log('setConfig', config);
+    // 确保配置目录存在
+    if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+    }
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
 const config = getConfig();
-console.log('config1', config);
 export default config;

@@ -6,8 +6,9 @@
       @click="toggleExpand"
     >
       <span class="node-icon">
-        <span v-if="node.type === 'directory'">{{ isExpanded ? '📂' : '📁' }}</span>
-        <span v-else>📄</span>
+        <FolderOpen v-if="node.type === 'directory' && isExpanded" :size="16" />
+        <Folder v-else-if="node.type === 'directory'" :size="16" />
+        <File v-else :size="16" />
       </span>
       <span class="node-name" :title="node.path">{{ node.name }}</span>
     </div>
@@ -24,6 +25,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Folder, FolderOpen, File } from 'lucide-vue-next'
 import type { FileTree } from '@/api/files'
 
 const props = defineProps<{
@@ -59,7 +61,10 @@ const toggleExpand = () => {
 
 .node-icon {
   margin-right: 6px;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  color: #667eea;
+  flex-shrink: 0;
 }
 
 .node-name {

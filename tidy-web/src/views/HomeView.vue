@@ -9,14 +9,17 @@
       <!-- 路径选择卡片 -->
       <div class="section-card">
         <div class="card-header">
-          <h2 class="card-title">📁 配置路径</h2>
+          <div class="card-title-wrapper">
+            <Folder class="card-icon" />
+            <h2 class="card-title">配置路径</h2>
+          </div>
         </div>
         <div v-if="loadingConfig" class="loading-state">
           <div class="spinner"></div>
           <span>加载中...</span>
         </div>
         <div v-else-if="configPaths.length === 0" class="empty-state">
-          <div class="empty-icon">📂</div>
+          <FolderOpen class="empty-icon" />
           <p>暂无配置路径</p>
           <router-link to="/config" class="btn btn-primary">去配置</router-link>
         </div>
@@ -27,7 +30,9 @@
             :class="['path-card', { active: selectedPath === folder.path }]"
             @click="selectPath(folder.path)"
           >
-            <div class="path-icon">📂</div>
+            <div class="path-icon">
+              <Folder :size="24" />
+            </div>
             <div class="path-info">
               <div class="path-name">{{ getPathName(folder.path) }}</div>
               <div class="path-full">{{ folder.path }}</div>
@@ -39,7 +44,10 @@
       <!-- 操作区域 -->
       <div v-if="selectedPath || currentPath" class="section-card">
         <div class="card-header">
-          <h2 class="card-title">🔍 扫描操作</h2>
+          <div class="card-title-wrapper">
+            <Search class="card-icon" />
+            <h2 class="card-title">扫描操作</h2>
+          </div>
         </div>
         <div class="action-area">
           <input
@@ -50,7 +58,7 @@
           />
           <button @click="handleScan" :disabled="scanning" class="btn btn-primary btn-large">
             <span v-if="scanning" class="spinner-small"></span>
-            <span v-else>🔍</span>
+            <Search v-else :size="18" />
             {{ scanning ? '扫描中...' : '扫描目录' }}
           </button>
         </div>
@@ -59,7 +67,10 @@
       <!-- 文件树 -->
       <div v-if="fileTree" class="section-card">
         <div class="card-header">
-          <h2 class="card-title">🌳 文件树</h2>
+          <div class="card-title-wrapper">
+            <FolderTree class="card-icon" />
+            <h2 class="card-title">文件树</h2>
+          </div>
           <div class="file-count">{{ getFileCount(fileTree) }} 个文件</div>
         </div>
         <div class="tree-wrapper">
@@ -68,7 +79,7 @@
       </div>
 
       <div v-else-if="!scanning" class="section-card empty-card">
-        <div class="empty-icon">📄</div>
+        <FileText class="empty-icon" />
         <p>请选择路径并扫描目录</p>
       </div>
     </div>
@@ -77,6 +88,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Folder, FolderOpen, Search, FolderTree, FileText } from 'lucide-vue-next'
 import { scanDirectory, type FileTree } from '@/api/files'
 import { getConfig } from '@/api/config'
 import FileTreeNode from '@/components/FileTreeNode.vue'
@@ -144,8 +156,6 @@ onMounted(() => {
 <style scoped>
 .home-view {
   padding: 1rem;
-  padding-bottom: calc(80px + 1rem); /* 为底部导航留出空间 */
-  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -199,6 +209,20 @@ onMounted(() => {
   border-bottom: 2px solid #f3f4f6;
 }
 
+.card-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-icon {
+  width: 24px;
+  height: 24px;
+  color: #667eea;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -248,8 +272,26 @@ onMounted(() => {
 }
 
 .path-icon {
-  font-size: 2rem;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.path-icon {
+  color: #667eea;
+  stroke-width: 2;
+}
+
+.path-card.active .path-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .path-info {
@@ -325,9 +367,15 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 4rem;
+  width: 80px;
+  height: 80px;
   margin-bottom: 1rem;
-  opacity: 0.5;
+  opacity: 0.4;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  stroke-width: 1.5;
 }
 
 .btn {
@@ -355,6 +403,7 @@ onMounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
+
 
 .btn-large {
   padding: 1rem 2rem;
@@ -396,7 +445,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .home-view {
     padding: 0.75rem;
-    padding-bottom: calc(80px + 0.75rem);
   }
 
   .page-header {

@@ -9,14 +9,17 @@
       <!-- 路径选择 -->
       <div class="section-card">
         <div class="card-header">
-          <h2 class="card-title">📁 选择路径</h2>
+          <div class="card-title-wrapper">
+            <Folder class="card-icon" />
+            <h2 class="card-title">选择路径</h2>
+          </div>
         </div>
         <div v-if="loadingConfig" class="loading-state">
           <div class="spinner"></div>
           <span>加载中...</span>
         </div>
         <div v-else-if="configPaths.length === 0" class="empty-state">
-          <div class="empty-icon">📂</div>
+          <FolderOpen class="empty-icon" />
           <p>暂无配置路径</p>
           <router-link to="/config" class="btn btn-primary">去配置</router-link>
         </div>
@@ -27,7 +30,9 @@
             :class="['path-card', { active: selectedPath === folder.path }]"
             @click="selectPath(folder.path)"
           >
-            <div class="path-icon">📂</div>
+            <div class="path-icon">
+              <Folder :size="24" />
+            </div>
             <div class="path-info">
               <div class="path-name">{{ getPathName(folder.path) }}</div>
               <div class="path-full">{{ folder.path }}</div>
@@ -36,12 +41,54 @@
         </div>
       </div>
 
+      <!-- 文件树浏览 -->
+      <div v-if="selectedPath && fileTree" class="section-card tree-card">
+        <div class="card-header">
+          <div class="card-title-wrapper">
+            <FolderTree class="card-icon" />
+            <h2 class="card-title">文件树浏览</h2>
+          </div>
+          <button
+            v-if="scanning"
+            class="btn btn-secondary btn-small"
+            disabled
+          >
+            <span class="spinner-small"></span>
+            扫描中...
+          </button>
+          <button
+            v-else
+            @click="handleScan"
+            class="btn btn-secondary btn-small"
+          >
+            <RefreshCw :size="16" />
+            刷新
+          </button>
+        </div>
+        <div class="tree-wrapper">
+          <TidyFileTreeNode
+            :node="fileTree"
+            :level="0"
+            :selected-path="currentPath"
+            @select="handleTreeSelect"
+            @tidy="handleTreeTidy"
+          />
+        </div>
+      </div>
+
       <!-- 操作区域 -->
       <div v-if="selectedPath || currentPath" class="section-card">
         <div class="card-header">
-          <h2 class="card-title">✨ 开始整理</h2>
+          <div class="card-title-wrapper">
+            <Sparkles class="card-icon" />
+            <h2 class="card-title">开始整理</h2>
+          </div>
         </div>
         <div class="action-area">
+          <div class="selected-path-display">
+            <span class="label">当前选中路径：</span>
+            <span class="path-value">{{ currentPath || selectedPath || '未选择' }}</span>
+          </div>
           <input
             v-model="currentPath"
             type="text"
@@ -50,7 +97,7 @@
           />
           <button @click="handleTidy" :disabled="tidying || !currentPath" class="btn btn-success btn-large">
             <span v-if="tidying" class="spinner-small"></span>
-            <span v-else>✨</span>
+            <Sparkles v-else :size="18" />
             {{ tidying ? '整理中...' : '开始整理' }}
           </button>
         </div>
@@ -59,7 +106,10 @@
       <!-- 整理日志 -->
       <div class="section-card log-card">
         <div class="card-header">
-          <h2 class="card-title">📋 整理日志</h2>
+          <div class="card-title-wrapper">
+            <FileText class="card-icon" />
+            <h2 class="card-title">整理日志</h2>
+          </div>
           <button
             v-if="tidyLogs.length > 0"
             @click="tidyLogs = []"
@@ -95,7 +145,7 @@
             <span>整理中...</span>
           </div>
           <div v-if="tidyLogs.length === 0 && !tidying" class="empty-log">
-            <div class="empty-icon">📝</div>
+            <FileText class="empty-icon" />
             <p>暂无日志，点击"开始整理"按钮开始整理文件</p>
           </div>
         </div>
@@ -106,8 +156,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { tidyFile, type TidyChunk } from '@/api/files'
+import { Folder, FolderOpen, Sparkles, FileText, FolderTree, RefreshCw } from 'lucide-vue-next'
+import { tidyFile, scanDirectory, type TidyChunk, type FileTree } from '@/api/files'
 import { getConfig } from '@/api/config'
+import TidyFileTreeNode from '@/components/TidyFileTreeNode.vue'
 
 const currentPath = ref('')
 const selectedPath = ref<string>('')
@@ -121,6 +173,8 @@ const tidyLogs = ref<Array<{
 
 const configPaths = ref<Array<{ path: string }>>([])
 const loadingConfig = ref(false)
+const fileTree = ref<FileTree | null>(null)
+const scanning = ref(false)
 
 const currentTime = computed(() => {
   return new Date().toLocaleTimeString()
@@ -144,9 +198,41 @@ const loadConfig = async () => {
   }
 }
 
-const selectPath = (path: string) => {
+const selectPath = async (path: string) => {
   selectedPath.value = path
   currentPath.value = path
+  // 自动扫描选中的路径
+  await scanPath(path)
+}
+
+const scanPath = async (path: string) => {
+  if (!path) return
+  scanning.value = true
+  fileTree.value = null
+  try {
+    const result = await scanDirectory(path, true)
+    fileTree.value = result.fileTree
+  } catch (error) {
+    console.error('扫描失败:', error)
+  } finally {
+    scanning.value = false
+  }
+}
+
+const handleScan = async () => {
+  const path = selectedPath.value || currentPath.value
+  if (path) {
+    await scanPath(path)
+  }
+}
+
+const handleTreeSelect = (path: string) => {
+  currentPath.value = path
+}
+
+const handleTreeTidy = (path: string) => {
+  currentPath.value = path
+  handleTidy()
 }
 
 const handleTidy = async () => {
@@ -201,8 +287,6 @@ onMounted(() => {
 <style scoped>
 .tidy-view {
   padding: 1rem;
-  padding-bottom: calc(80px + 1rem);
-  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -247,6 +331,12 @@ onMounted(() => {
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
+.tree-card {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
 .log-card {
   min-height: 400px;
   display: flex;
@@ -260,6 +350,20 @@ onMounted(() => {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f3f4f6;
+}
+
+.card-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-icon {
+  width: 24px;
+  height: 24px;
+  color: #667eea;
+  flex-shrink: 0;
+  stroke-width: 2;
 }
 
 .card-title {
@@ -303,8 +407,23 @@ onMounted(() => {
 }
 
 .path-icon {
-  font-size: 2rem;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.3s ease;
+  color: #667eea;
+  stroke-width: 2;
+}
+
+.path-card.active .path-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .path-info {
@@ -337,6 +456,56 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.selected-path-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.selected-path-display .label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.selected-path-display .path-value {
+  color: #667eea;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-wrapper {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
 }
 
 .path-input {
@@ -464,9 +633,17 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 4rem;
+  width: 80px;
+  height: 80px;
   margin-bottom: 1rem;
-  opacity: 0.5;
+  opacity: 0.4;
+  color: #9ca3af;
+  stroke-width: 1.5;
+}
+
+.empty-log .empty-icon {
+  width: 60px;
+  height: 60px;
 }
 
 .btn {
@@ -546,7 +723,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .tidy-view {
     padding: 0.75rem;
-    padding-bottom: calc(80px + 0.75rem);
   }
 
   .page-header {

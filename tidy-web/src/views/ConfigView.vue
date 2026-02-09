@@ -13,19 +13,22 @@
             :class="['tab', { active: activeTab === 'folders' }]"
             @click="activeTab = 'folders'"
           >
-            📁 路径
+            <Folder :size="18" />
+            <span>路径</span>
           </button>
           <button
             :class="['tab', { active: activeTab === 'log' }]"
             @click="activeTab = 'log'"
           >
-            📝 日志
+            <FileText :size="18" />
+            <span>日志</span>
           </button>
           <button
             :class="['tab', { active: activeTab === 'ai' }]"
             @click="activeTab = 'ai'"
           >
-            🤖 AI
+            <Brain :size="18" />
+            <span>AI</span>
           </button>
         </div>
 
@@ -68,7 +71,7 @@
                   </button>
                 </div>
                 <div v-if="configPaths.length === 0" class="empty-paths">
-                  <div class="empty-icon">📂</div>
+                  <FolderOpen class="empty-icon" />
                   <p>暂无配置路径</p>
                 </div>
               </div>
@@ -165,10 +168,12 @@
       <div class="action-bar">
         <button @click="loadConfig" class="btn btn-secondary" :disabled="loadingConfig">
           <span v-if="loadingConfig" class="spinner-small"></span>
+          <RefreshCw v-else :size="18" />
           {{ loadingConfig ? '加载中...' : '重新加载' }}
         </button>
         <button @click="saveConfig" class="btn btn-primary btn-large" :disabled="savingConfig || !fullConfig">
           <span v-if="savingConfig" class="spinner-small"></span>
+          <Save v-else :size="18" />
           {{ savingConfig ? '保存中...' : '保存配置' }}
         </button>
       </div>
@@ -178,6 +183,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Folder, FolderOpen, FileText, Brain, RefreshCw, Save } from 'lucide-vue-next'
 import { getConfig, setConfig, type Config } from '@/api/config'
 
 const fullConfig = ref<Config | null>(null)
@@ -252,8 +258,6 @@ onMounted(() => {
 <style scoped>
 .config-view {
   padding: 1rem;
-  padding-bottom: calc(80px + 1rem);
-  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -312,6 +316,10 @@ onMounted(() => {
   color: #6b7280;
   transition: all 0.3s ease;
   border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .tab:hover {
@@ -425,9 +433,12 @@ onMounted(() => {
 }
 
 .empty-paths .empty-icon {
-  font-size: 3rem;
+  width: 60px;
+  height: 60px;
   margin-bottom: 0.5rem;
   opacity: 0.5;
+  color: #9ca3af;
+  stroke-width: 1.5;
 }
 
 .action-bar {
@@ -537,7 +548,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .config-view {
     padding: 0.75rem;
-    padding-bottom: calc(80px + 0.75rem);
   }
 
   .page-header {

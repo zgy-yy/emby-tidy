@@ -8,7 +8,7 @@ export class WatchController {
 
     @Post('dir')
     watchDirectory(@Body() body: WatchDirectoryDto) {
-        return this.watchService.watchDirectory(body.directory);
+        return this.watchService.watchDirectory(body.path);
     }
 
     @Get('all')
@@ -18,6 +18,6 @@ export class WatchController {
 
     @Post('unwatch')
     unwatchDirectory(@Body() body: UnwatchDirectoryDto) {
-        return this.watchService.unwatchDirectory(body.directory);
+        return this.watchService.unwatchDirectory(body.path);
     }
 }

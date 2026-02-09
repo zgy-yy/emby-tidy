@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, MaxLength, IsBoolean } from 'class-validator';
 
 export class ScanDirectoryDto {
     @IsString({ message: 'directory 必须是字符串' })
@@ -6,6 +6,10 @@ export class ScanDirectoryDto {
     @MinLength(1, { message: 'directory 长度不能小于1' })
     @MaxLength(1000, { message: 'directory 长度不能超过1000' })
     directory: string;
+
+    @IsBoolean({ message: 'recursive 必须是布尔值' })
+    @IsNotEmpty({ message: 'recursive 不能为空' })
+    recursive: boolean;
 }
 
 export class DeleteFileDto {

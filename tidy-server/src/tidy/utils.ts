@@ -33,7 +33,26 @@ function screenFolder(directory: string, recursive: boolean = true) {
             const items = fs.readdirSync(currentPath);
             for (const item of items) {
                 const filePath = path.join(currentPath, item);
-                children.push(scan(filePath));
+                if (recursive) {
+                    children.push(scan(filePath));
+                } else {
+                    const stat = fs.statSync(filePath);
+                    if (stat.isFile()) {
+                        children.push({
+                            name: item,
+                            path: filePath,
+                            type: 'file',
+                            children: [],
+                        });
+                    } else if (stat.isDirectory()) {
+                        children.push({
+                            name: item,
+                            path: filePath,
+                            type: 'directory',
+                            children: [],
+                        });
+                    }
+                }
             }
             return {
                 name: name,

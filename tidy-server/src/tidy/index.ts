@@ -4,6 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile } from "./tools";
 import { logger } from '@/logger';
 import { Readable } from 'stream';
+import { ContentBlock, Message } from "@langchain/core/messages";
 
 
 const model = new ChatOpenAI({
@@ -37,8 +38,8 @@ const systemPrompt = `
 1. 首先使用 scan_directory 扫描目录，了解当前文件结构
 2. 根据扫描结果，判断哪些文件需要整理
 3. 按照 Emby 标准格式整理文件：
-   - 电影格式：Movies/电影名 (年份)/电影名 (年份).扩展名
-   - 电视剧格式：TV Shows/剧集名/Season XX/剧集名 - SXXEXX - 集名.扩展名
+   - 电影格式：电影名 (年份)/电影名 (年份).扩展名
+   - 电视剧格式：剧集名/Season XX/剧集名 - SXXEXX - 集名.扩展名
 4. 删除非媒体文件（文档、压缩包等）
 5. 任务完成后，直接结束，不要再调用任何工具
 
@@ -55,16 +56,44 @@ const agent = createAgent({
     tools: [scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile],
 });
 
+/**
+/**
+ * 解析 chunk 并提取关键信息
+ */
+function parseChunk(chunk: Record<string, any>) {
+    const [nodeName, rawData] = Object.entries(chunk)[0];
+    logger.info('nodeName', nodeName);
+    const message: Message[] = rawData.messages;
+    const result: {
+        node: string
+        data: {
+            type: string;
+            name: string;
+            content: string | ContentBlock[];
+        }[]
+    } = {
+        node: nodeName,
+        data: [],
+    }
+    message.forEach(message => {
+        result.data.push({
+            type: message.type,
+            name: message.name ?? '',
+            content: message.content
+        });
+    });
+    return result;
+}
 
 export async function aiExecutor(messages: string) {
     console.log('messages', messages);
     try {
         const recursionLimit = config.ai.recursionLimit ?? 1000;
-        
+
         logger.debug(`使用递归限制: ${recursionLimit}`);
-        
+
         // 获取原始流
-        const originalStream = await agent.stream({
+        const originalStream = await agent.graph.stream({
             messages: [{ role: "user", content: messages }],
         }, {
             recursionLimit: recursionLimit,
@@ -77,15 +106,15 @@ export async function aiExecutor(messages: string) {
                 // Readable 流的 read 方法由异步迭代器驱动
             }
         });
-        
+
         // 异步处理原始流，记录日志并转发到新流
         (async () => {
             try {
                 for await (const chunk of originalStream) {
-                    // 记录日志
-                    logger.info('Agent 流数据块:', JSON.stringify(chunk, null, 2));
-                    // 将数据推送到新流（对象模式可以推送对象）
-                    newStream.push(chunk.content);
+                    // 解析并记录 chunk 内容
+                    const result = parseChunk(chunk);
+                    logger.info(`[${result.node}] ${result.data.map(d => `${d.type}:${d.name}`).join(', ')}`);
+                    newStream.push(result);
                 }
                 // 流结束
                 newStream.push(null);
@@ -95,7 +124,6 @@ export async function aiExecutor(messages: string) {
                 newStream.destroy(error);
             }
         })();
-        
         return newStream;
     } catch (error: any) {
         logger.error('Agent 执行失败:', error);

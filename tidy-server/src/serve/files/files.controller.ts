@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Query, Body, Res, Header } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Query, Body, Res } from '@nestjs/common';
 import { FilesService } from './files.service';
 import { ScanDirectoryDto, DeleteFileDto, MoveFileDto, RenameFileDto, TidyFileDto } from './dto/files.dto';
 import type { Response } from 'express';
@@ -9,7 +9,7 @@ export class FilesController {
 
     @Get('scan')
     scan(@Query() query: ScanDirectoryDto) {
-        return this.filesService.scanDirectory(query.directory);
+        return this.filesService.scanDirectory(query.directory, query.recursive);
     }
 
     @Delete()
@@ -29,34 +29,40 @@ export class FilesController {
 
     @Post('tidy')
     async tidyFile(@Body() body: TidyFileDto, @Res() res: Response) {
-        // 使用 @Res() 时，必须手动控制响应，不能返回任何值
         try {
             const stream = await this.filesService.tidyFile(body.path);
-            
-            // 设置响应头
-            res.setHeader('Content-Type', 'application/x-ndjson'); // NDJSON 格式
+
+            // 设置响应头为 NDJSON 格式（流式传输）
+            res.setHeader('Content-Type', 'application/x-ndjson');
             res.setHeader('Transfer-Encoding', 'chunked');
-            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Cache-Control', 'no-cache, no-transform');
             res.setHeader('Connection', 'keep-alive');
+            res.setHeader('X-Accel-Buffering', 'no'); // 禁用 Nginx 缓冲
             
-            // 流式返回数据
+            // 立即发送响应头，确保前端可以开始接收数据
+            res.flushHeaders();
+
+            // 流式返回数据（NDJSON 格式：每行一个 JSON）
             for await (const chunk of stream) {
-                // 将每个 chunk 转换为 JSON 字符串并发送（NDJSON 格式：每行一个 JSON）
+                // chunk 是对象，需要序列化为 JSON 字符串
                 const data = JSON.stringify(chunk) + '\n';
                 res.write(data);
             }
-            
             // 流结束
             res.end();
         } catch (error: any) {
             // 如果还没有发送响应头，设置错误状态
             if (!res.headersSent) {
-                res.status(500).json({ 
-                    error: '流处理失败', 
-                    message: error?.message || '未知错误' 
+                res.status(500).json({
+                    error: '流处理失败',
+                    message: error?.message || '未知错误'
                 });
             } else {
-                // 如果已经开始发送数据，只能关闭连接
+                // 如果已经开始发送数据，发送错误信息后关闭
+                res.write(JSON.stringify({
+                    error: '流处理失败',
+                    message: error?.message || '未知错误'
+                }) + '\n');
                 res.end();
             }
         }

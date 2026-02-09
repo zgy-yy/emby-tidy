@@ -3,12 +3,32 @@ import { RouterLink, RouterView } from 'vue-router'
 
 import { get, post, put } from './net'
 
+function tidy() {
+  const urlencoded = new URLSearchParams();
+  urlencoded.append("path", "/Volumes/dav.2dland.cn/电视");
+  fetch('/api/file/tidy', {
+    method: 'POST',
+    body: urlencoded,
+  }).then(
+    async (res) => {
+      const reader = await res.body!.getReader()
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
+        const text = new TextDecoder().decode(value);
+        const lines = text.split('\n').filter(Boolean);
 
-post('/file/tidy', {
-  path: '/Volumes/dav.2dland.cn/电视',
-})
+        lines.forEach(line => {
+          const data = JSON.parse(line);
+          console.log('收到数据:', data);
+        });
+      }
+    }
+  )
+}
 
+tidy()
 
 </script>
 

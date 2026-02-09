@@ -7,7 +7,6 @@ export type Config = {
         level: string;
         toFile: boolean;
         logDir: string;
-        toConsole: boolean;
     }
     ai: {
         model: string;
@@ -17,21 +16,23 @@ export type Config = {
     }
     folders: {
         path: string;
-        recursive: boolean;
-        usePolling: boolean;
     }[]
+    webDav: {
+        url: string;
+        username: string;
+        password: string;
+    }
 }
 
 const configPath = path.join(__dirname, 'config.json');
 console.log('configPath', configPath);
-function getConfig(): Config {
+export function getConfig(): Config {
     if (!fs.existsSync(configPath)) {
         const defaultConfig: Config = {
             log: {
                 level: 'INFO',
                 toFile: true,
                 logDir: './logs',
-                toConsole: true,
             },
             ai: {
                 model: 'deepseek-chat',
@@ -41,9 +42,12 @@ function getConfig(): Config {
             },
             folders: [{
                 path: './',
-                recursive: true,
-                usePolling: true,
-            }]
+            }],
+            webDav: {
+                url: '',
+                username: '',
+                password: '',
+            }
         }
         fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
         return defaultConfig
@@ -51,6 +55,12 @@ function getConfig(): Config {
     const config = fs.readFileSync(configPath, 'utf8');
     const configJson = JSON.parse(config) as Config;
     return configJson;
+}
+
+
+export function setConfig(config: Config) {
+    console.log('setConfig', config);
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
 const config = getConfig();

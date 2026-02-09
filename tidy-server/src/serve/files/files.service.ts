@@ -4,10 +4,10 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class FilesService {
-    constructor() {}
+    constructor() { }
 
-    scanDirectory(directory: string) {
-        return utils.screenFolder(directory);
+    scanDirectory(directory: string, recursive: boolean = true) {
+        return utils.screenFolder(directory, recursive);
     }
 
     deleteFile(filePath: string) {
@@ -22,7 +22,7 @@ export class FilesService {
         return utils.renameFile(filePath, newName);
     }
     async tidyFile(path: string) {
-        const stream = await aiExecutor(`整理 ${path} 下的所有媒体文件,并返回整理后的文件路径列表`);
+        const stream = aiExecutor(`整理 ${path} 下的所有媒体文件,并返回整理后的文件路径列表`);
         return stream;
     }
 }

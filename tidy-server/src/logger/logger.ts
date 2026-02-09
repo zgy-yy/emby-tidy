@@ -5,7 +5,7 @@ import * as fs from 'fs';
 /**
  * 从环境变量读取配置
  */
-function getConfig() {
+function getLoggerConfig() {
     const logLevel = 'INFO';
     // 默认启用文件日志，除非明确设置为 false
     const logToFile = true;
@@ -20,7 +20,7 @@ function getConfig() {
     };
 }
 
-const config = getConfig();
+const config = getLoggerConfig();
 
 // 确保日志目录存在
 if (config.toFile && !fs.existsSync(config.logDir)) {

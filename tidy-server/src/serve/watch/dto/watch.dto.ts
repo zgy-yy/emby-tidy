@@ -5,7 +5,7 @@ export class WatchDirectoryDto {
     @IsNotEmpty({ message: 'directory 不能为空' })
     @MinLength(1, { message: 'directory 长度不能小于1' })
     @MaxLength(1000, { message: 'directory 长度不能超过1000' })
-    directory: string;
+    path: string;
 }
 
 export class UnwatchDirectoryDto {
@@ -13,5 +13,5 @@ export class UnwatchDirectoryDto {
     @IsNotEmpty({ message: 'directory 不能为空' })
     @MinLength(1, { message: 'directory 长度不能小于1' })
     @MaxLength(1000, { message: 'directory 长度不能超过1000' })
-    directory: string;
+    path: string;
 }

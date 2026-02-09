@@ -1,101 +1,52 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-
-import { get, post, put } from './net'
-
-function tidy() {
-  const urlencoded = new URLSearchParams();
-  urlencoded.append("path", "/Volumes/dav.2dland.cn/电视");
-  fetch('/api/file/tidy', {
-    method: 'POST',
-    body: urlencoded,
-  }).then(
-    async (res) => {
-      const reader = await res.body!.getReader()
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const text = new TextDecoder().decode(value);
-        const lines = text.split('\n').filter(Boolean);
-
-        lines.forEach(line => {
-          const data = JSON.parse(line);
-          console.log('收到数据:', data);
-        });
-      }
-    }
-  )
-}
-
-tidy()
-
+import { RouterView } from 'vue-router'
+import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
-  <RouterView />
+  <div id="app">
+    <NavBar />
+    <RouterView />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-nav {
+#app {
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+  padding-bottom: 0; /* 底部导航是 fixed，不需要 padding */
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+/* 移动端优化 */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
   }
 
-  .logo {
-    margin: 0 2rem 0 0;
+  /* 防止 iOS 双击缩放 */
+  * {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
+  /* 优化触摸目标大小 */
+  button, a, input, select, textarea {
+    min-height: 44px; /* iOS 推荐的最小触摸目标 */
   }
 }
 </style>

@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 
 
 function get(url: string, params?: any) {
-    axiosInstance.get(url, { params })  
+    return axiosInstance.get(url, { params })  
 }
 
 function post(url: string, data: any) {
@@ -19,13 +19,16 @@ function post(url: string, data: any) {
 }
 
 function put(url: string, data: any) {
-    axiosInstance.put(url, data)
+    return axiosInstance.put(url, data)
 }
 
+function del(url: string, params?: any) {
+    return axiosInstance.delete(url, { params })
+}
 
-export  {
+export {
     get,
     post,
     put,
-
+    del,
 }

@@ -1,12 +1,62 @@
-import type { Config } from "@/config";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsObject, ValidateNested } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 
+export class LogConfigDto {
+    @IsString()
+    @IsNotEmpty()
+    level: string;
+
+    @IsBoolean()
+    toFile: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    logDir: string;
+}
+
+export class AiConfigDto {
+    @IsString()
+    @IsNotEmpty()
+    model: string;
+
+    @IsString()
+    @IsNotEmpty()
+    baseUrl: string;
+
+    @IsString()
+    @IsNotEmpty()
+    apiKey: string;
+
+    @IsNumber()
+    @IsOptional()
+    recursionLimit?: number;
+}
+
+export class FolderDto {
+    @IsString()
+    @IsNotEmpty()
+    path: string;
+}
+
+export class ConfigDto {
+    @ValidateNested()
+    @Type(() => LogConfigDto)
+    log: LogConfigDto;
+
+    @ValidateNested()
+    @Type(() => AiConfigDto)
+    ai: AiConfigDto;
+
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => FolderDto)
+    folders: FolderDto[];
+}
 
 export class SetConfigDto {
-    @IsObject({ message: 'config 必须是对象' })
-    @IsNotEmpty({ message: 'config 不能为空' })
-    @ValidateNested({ each: true })
-    @Type(() => Object)
-    config: Config;
+    @IsObject()
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => ConfigDto)
+    config: ConfigDto;
 }

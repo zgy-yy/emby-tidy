@@ -17,14 +17,10 @@ export type Config = {
     folders: {
         path: string;
     }[]
-    webDav: {
-        url: string;
-        username: string;
-        password: string;
-    }
 }
 
 const configPath = path.join(__dirname, 'config.json');
+console.log('__dirname', __dirname);    
 console.log('configPath', configPath);
 export function getConfig(): Config {
     if (!fs.existsSync(configPath)) {
@@ -41,20 +37,15 @@ export function getConfig(): Config {
                 recursionLimit: 1000, // 默认递归限制为 1000
             },
             folders: [{
-                path: './',
+                path: '/Volumes/dav.2dland.cn/test',
             }],
-            webDav: {
-                url: '',
-                username: '',
-                password: '',
-            }
         }
         fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
         return defaultConfig
     }
     const config = fs.readFileSync(configPath, 'utf8');
     const configJson = JSON.parse(config) as Config;
-    return configJson;
+    return configJson as Config;
 }
 
 

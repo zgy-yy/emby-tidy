@@ -1,15 +1,15 @@
 <template>
-  <div class="home-view">
+  <div class="tidy-view">
     <div class="page-header">
-      <h1 class="page-title">文件浏览</h1>
-      <p class="page-subtitle">选择路径并扫描目录结构</p>
+      <h1 class="page-title">文件整理</h1>
+      <p class="page-subtitle">使用 AI 自动整理文件到 Emby 标准格式</p>
     </div>
 
     <div class="content-wrapper">
-      <!-- 路径选择卡片 -->
+      <!-- 路径选择 -->
       <div class="section-card">
         <div class="card-header">
-          <h2 class="card-title">📁 配置路径</h2>
+          <h2 class="card-title">📁 选择路径</h2>
         </div>
         <div v-if="loadingConfig" class="loading-state">
           <div class="spinner"></div>
@@ -39,7 +39,7 @@
       <!-- 操作区域 -->
       <div v-if="selectedPath || currentPath" class="section-card">
         <div class="card-header">
-          <h2 class="card-title">🔍 扫描操作</h2>
+          <h2 class="card-title">✨ 开始整理</h2>
         </div>
         <div class="action-area">
           <input
@@ -48,54 +48,87 @@
             placeholder="或输入自定义路径"
             class="path-input"
           />
-          <button @click="handleScan" :disabled="scanning" class="btn btn-primary btn-large">
-            <span v-if="scanning" class="spinner-small"></span>
-            <span v-else>🔍</span>
-            {{ scanning ? '扫描中...' : '扫描目录' }}
+          <button @click="handleTidy" :disabled="tidying || !currentPath" class="btn btn-success btn-large">
+            <span v-if="tidying" class="spinner-small"></span>
+            <span v-else>✨</span>
+            {{ tidying ? '整理中...' : '开始整理' }}
           </button>
         </div>
       </div>
 
-      <!-- 文件树 -->
-      <div v-if="fileTree" class="section-card">
+      <!-- 整理日志 -->
+      <div class="section-card log-card">
         <div class="card-header">
-          <h2 class="card-title">🌳 文件树</h2>
-          <div class="file-count">{{ getFileCount(fileTree) }} 个文件</div>
+          <h2 class="card-title">📋 整理日志</h2>
+          <button
+            v-if="tidyLogs.length > 0"
+            @click="tidyLogs = []"
+            class="btn-clear"
+          >
+            清空
+          </button>
         </div>
-        <div class="tree-wrapper">
-          <FileTreeNode :node="fileTree" :level="0" />
+        <div class="log-container">
+          <div
+            v-for="(log, index) in tidyLogs"
+            :key="index"
+            :class="['log-item', `log-${log.type}`]"
+          >
+            <div class="log-header-item">
+              <span class="log-time">{{ log.time }}</span>
+              <span class="log-node">[{{ log.node }}]</span>
+            </div>
+            <div class="log-content">
+              <div
+                v-for="(item, idx) in log.data"
+                :key="idx"
+                class="log-data-item"
+              >
+                <span class="log-type">{{ item.type }}</span>
+                <span v-if="item.name" class="log-name">: {{ item.name }}</span>
+                <div class="log-text">{{ item.content }}</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="tidying && tidyLogs.length === 0" class="log-item log-info">
+            <span class="log-time">{{ currentTime }}</span>
+            <span>整理中...</span>
+          </div>
+          <div v-if="tidyLogs.length === 0 && !tidying" class="empty-log">
+            <div class="empty-icon">📝</div>
+            <p>暂无日志，点击"开始整理"按钮开始整理文件</p>
+          </div>
         </div>
-      </div>
-
-      <div v-else-if="!scanning" class="section-card empty-card">
-        <div class="empty-icon">📄</div>
-        <p>请选择路径并扫描目录</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { scanDirectory, type FileTree } from '@/api/files'
+import { ref, computed, onMounted } from 'vue'
+import { tidyFile, type TidyChunk } from '@/api/files'
 import { getConfig } from '@/api/config'
-import FileTreeNode from '@/components/FileTreeNode.vue'
 
 const currentPath = ref('')
 const selectedPath = ref<string>('')
-const fileTree = ref<FileTree | null>(null)
-const scanning = ref(false)
+const tidying = ref(false)
+const tidyLogs = ref<Array<{
+  time: string
+  node: string
+  type: string
+  data: Array<{ type: string; name: string; content: string }>
+}>>([])
+
 const configPaths = ref<Array<{ path: string }>>([])
 const loadingConfig = ref(false)
+
+const currentTime = computed(() => {
+  return new Date().toLocaleTimeString()
+})
 
 const getPathName = (path: string) => {
   const parts = path.split('/').filter(Boolean)
   return parts[parts.length - 1] || path
-}
-
-const getFileCount = (tree: FileTree): number => {
-  if (tree.type === 'file') return 1
-  return tree.children.reduce((sum, child) => sum + getFileCount(child), 0)
 }
 
 const loadConfig = async () => {
@@ -114,26 +147,50 @@ const loadConfig = async () => {
 const selectPath = (path: string) => {
   selectedPath.value = path
   currentPath.value = path
-  fileTree.value = null
 }
 
-const handleScan = async () => {
+const handleTidy = async () => {
   const path = currentPath.value || selectedPath.value
   if (!path) {
     alert('请输入目录路径或选择配置路径')
     return
   }
 
-  scanning.value = true
-  try {
-    const result = await scanDirectory(path, true)
-    fileTree.value = result.fileTree
-  } catch (error) {
-    console.error('扫描失败:', error)
-    alert('扫描失败: ' + (error instanceof Error ? error.message : String(error)))
-  } finally {
-    scanning.value = false
-  }
+  tidying.value = true
+  tidyLogs.value = []
+
+  tidyFile(
+    path,
+    (chunk: TidyChunk) => {
+      tidyLogs.value.push({
+        time: new Date().toLocaleTimeString(),
+        node: chunk.node,
+        type: chunk.node === 'model_request' ? 'info' : chunk.node === 'tools' ? 'success' : 'info',
+        data: chunk.data,
+      })
+
+      setTimeout(() => {
+        const container = document.querySelector('.log-container')
+        if (container) {
+          container.scrollTop = container.scrollHeight
+        }
+      }, 0)
+    },
+    (error) => {
+      console.error('整理失败:', error)
+      tidyLogs.value.push({
+        time: new Date().toLocaleTimeString(),
+        node: 'error',
+        type: 'error',
+        data: [{ type: 'error', name: '', content: error.message }],
+      })
+      tidying.value = false
+    },
+    () => {
+      console.log('整理完成')
+      tidying.value = false
+    }
+  )
 }
 
 onMounted(() => {
@@ -142,9 +199,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.home-view {
+.tidy-view {
   padding: 1rem;
-  padding-bottom: calc(80px + 1rem); /* 为底部导航留出空间 */
+  padding-bottom: calc(80px + 1rem);
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -190,6 +247,12 @@ onMounted(() => {
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
+.log-card {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -204,14 +267,6 @@ onMounted(() => {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
-}
-
-.file-count {
-  font-size: 0.875rem;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
 }
 
 .path-grid {
@@ -299,12 +354,101 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.tree-wrapper {
-  max-height: 600px;
+.log-container {
+  flex: 1;
   overflow-y: auto;
-  padding: 0.5rem;
-  background: #f9fafb;
+  background: #1e1e1e;
+  padding: 1rem;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  max-height: 600px;
+  min-height: 300px;
+}
+
+.log-item {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
   border-radius: 8px;
+  background: #2d2d2d;
+  border-left: 4px solid #666;
+}
+
+.log-item.log-info {
+  border-left-color: #3b82f6;
+}
+
+.log-item.log-success {
+  border-left-color: #10b981;
+}
+
+.log-item.log-error {
+  border-left-color: #ef4444;
+}
+
+.log-header-item {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.log-time {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.log-node {
+  color: #d1d5db;
+  font-weight: bold;
+  font-size: 0.75rem;
+}
+
+.log-content {
+  color: #e5e7eb;
+}
+
+.log-type {
+  color: #60a5fa;
+  font-weight: bold;
+}
+
+.log-name {
+  color: #9ca3af;
+}
+
+.log-text {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #f3f4f6;
+  line-height: 1.6;
+}
+
+.empty-log {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.empty-log .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.btn-clear {
+  padding: 0.5rem 1rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.btn-clear:hover {
+  background: #4b5563;
 }
 
 .loading-state,
@@ -317,11 +461,6 @@ onMounted(() => {
   padding: 3rem 1rem;
   text-align: center;
   color: #6b7280;
-}
-
-.empty-card {
-  text-align: center;
-  padding: 3rem 1rem;
 }
 
 .empty-icon {
@@ -343,6 +482,17 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
 .btn-primary {
@@ -394,7 +544,7 @@ onMounted(() => {
 
 /* 移动端优化 */
 @media (max-width: 768px) {
-  .home-view {
+  .tidy-view {
     padding: 0.75rem;
     padding-bottom: calc(80px + 0.75rem);
   }
@@ -434,16 +584,15 @@ onMounted(() => {
     font-size: 1.5rem;
   }
 
-  .path-name {
-    font-size: 0.9rem;
-  }
-
-  .path-full {
-    font-size: 0.7rem;
-  }
-
-  .tree-wrapper {
+  .log-container {
     max-height: 400px;
+    font-size: 0.8rem;
+    padding: 0.75rem;
+  }
+
+  .log-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
   .btn-large {

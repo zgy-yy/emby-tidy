@@ -1,9 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { logger } from '@/logger';
-import config from '@/config';
 import { ValidationPipe } from '@nestjs/common';
-logger.info('config', config);
+
 logger.info('Starting Tidy Server');
 
 let production = false;

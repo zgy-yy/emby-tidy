@@ -375,6 +375,7 @@ const saveConfig = async () => {
     // 明确构建配置对象，排除 webDav 字段
     const updatedConfig: Config = {
       log: fullConfig.value.log,
+      tmdb: fullConfig.value.tmdb,
       ai: fullConfig.value.ai,
       folders: configPaths.value,
     }

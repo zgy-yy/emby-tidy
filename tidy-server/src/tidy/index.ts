@@ -1,7 +1,7 @@
 import { createAgent, createMiddleware, ToolMessage } from "langchain";
 import config from '@/config';
 import { ChatOpenAI } from "@langchain/openai";
-import { scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile } from "./tools";
+import { scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile, searchMediaInfo, searchMovieInfo, searchTvInfo } from "./tools";
 import { logger } from '@/logger';
 import { Readable } from 'stream';
 import { ContentBlock, Message } from "@langchain/core/messages";
@@ -49,12 +49,14 @@ const systemPrompt = `
 - 不要重复扫描同一个目录
 - 整理完成后立即结束任务
 - 只需要整理给定目录的内容，不要整理父目录的内容
+- 不确定电影/剧集正式名称或年份时，可使用 search_media_info、search_movie_info、search_tv_info 查询 TMDB 后再重命名
+- 重命名后查询 TMDB 确认是否正确
 `;
 const agent = createAgent({
     model: model,
     middleware: [handleToolErrors],
     systemPrompt: systemPrompt,
-    tools: [scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile],
+    tools: [scanDirectory, createDirectory, deleteDirectory, renameDirectory, moveFile, renameFile, deleteFile, searchMediaInfo, searchMovieInfo, searchTvInfo],
 });
 
 /**

@@ -32,6 +32,7 @@
     "class-validator": "^0.14.3",
     "langchain": "^1.2.17",
     "log4js": "^6.9.1",
+    "moviedb-promise": "^4.0.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "tsconfig-paths": "^4.2.0"

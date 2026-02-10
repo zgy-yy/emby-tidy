@@ -3,6 +3,7 @@ import { tool } from "langchain";
 import * as z from "zod";
 import utils from './utils';
 import { logger } from '@/logger';
+import { searchMovies, searchTv, searchMedia } from './tmdb';
 /**
  * 扫描目录中的媒体文件
  */
@@ -128,6 +129,83 @@ export const renameDirectory: any = tool(
         schema: z.object({
             directory: z.string().describe("要重命名的目录路径（可以是相对路径或绝对路径）"),
             newName: z.string().describe("新的目录名"),
-        }), 
+        }),
+    }
+);
+
+/**
+ * 搜索媒体信息（电影 + 剧集 + 人物，TMDB）
+ */
+export const searchMediaInfo: any = tool(
+    async (input: { query: string; page?: number }) => {
+        logger.info(`搜索媒体: ${input.query}, page: ${input.page ?? 1}`);
+        const result = await searchMedia(input.query, input.page ?? 1);
+        const count = result.results?.length ?? 0;
+        logger.info(`媒体搜索完成，找到 ${count} 条结果`);
+        return {
+            success: true,
+            ...result,
+            count,
+        }
+    },
+    {
+        name: "search_media_info",
+        description: "根据关键词搜索媒体信息（电影、剧集、人物）。用于根据文件名或标题查询 TMDB 上的正式名称、年份等信息，便于整理或重命名。返回结果包含 title/name、id、年份等。",
+        schema: z.object({
+            query: z.string().describe("搜索关键词，可以是电影名、剧集名或文件名中的标题部分"),
+            page: z.number().optional().describe("页码，默认为 1"),
+        }),
+    }
+);
+
+/**
+ * 搜索电影信息（TMDB）
+ */
+export const searchMovieInfo: any = tool(
+    async (input: { query: string; page?: number; year?: number }) => {
+        logger.info(`搜索电影: ${input.query}, page: ${input.page ?? 1}, year: ${input.year ?? '-'}`);
+        const result = await searchMovies(input.query, { page: input.page ?? 1, year: input.year });
+        const count = result.results?.length ?? 0;
+        logger.info(`电影搜索完成，找到 ${count} 条结果`);
+        return {
+            success: true,
+            ...result,
+            count,
+        }
+    },
+    {
+        name: "search_movie_info",
+        description: "根据关键词搜索电影信息（TMDB）。用于确认电影正式名称和年份，便于按 Emby 格式重命名。",
+        schema: z.object({
+            query: z.string().describe("电影名或关键词"),
+            page: z.number().optional().describe("页码，默认为 1"),
+            year: z.number().optional().describe("上映年份，用于缩小范围"),
+        }),
+    }
+);
+
+/**
+ * 搜索剧集信息（TMDB）
+ */
+export const searchTvInfo: any = tool(
+    async (input: { query: string; page?: number; year?: number }) => {
+        logger.info(`搜索剧集: ${input.query}, page: ${input.page ?? 1}, year: ${input.year ?? '-'}`);
+        const result = await searchTv(input.query, { page: input.page ?? 1, year: input.year });
+        const count = result.results?.length ?? 0;
+        logger.info(`剧集搜索完成，找到 ${count} 条结果`);
+        return {
+            success: true,
+            ...result,
+            count,
+        }
+    },
+    {
+        name: "search_tv_info",
+        description: "根据关键词搜索剧集/电视剧信息（TMDB）。用于确认剧集正式名称和年份，便于按 Emby 格式重命名。",
+        schema: z.object({
+            query: z.string().describe("剧集名或关键词"),
+            page: z.number().optional().describe("页码，默认为 1"),
+            year: z.number().optional().describe("首播年份，用于缩小范围"),
+        }),
     }
 );

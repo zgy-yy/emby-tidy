@@ -30,6 +30,13 @@
             <Brain :size="18" />
             <span>AI</span>
           </button>
+          <button
+            :class="['tab', { active: activeTab === 'tmdb' }]"
+            @click="activeTab = 'tmdb'"
+          >
+            <Film :size="18" />
+            <span>TMDB</span>
+          </button>
         </div>
 
         <div v-if="loadingConfig" class="loading-state">
@@ -161,6 +168,24 @@
               </div>
             </div>
           </div>
+
+          <!-- TMDB 配置 -->
+          <div v-show="activeTab === 'tmdb'" class="tab-content">
+            <div class="form-section">
+              <h3 class="form-section-title">TMDB 设置</h3>
+              <p class="form-hint">用于整理时搜索电影/剧集信息，获取标准名称与年份。请到 <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org</a> 申请 API Key。</p>
+              <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input
+                  :value="fullConfig.tmdb?.key ?? ''"
+                  @input="updateConfigField('tmdb', 'key', ($event.target as HTMLInputElement).value)"
+                  type="password"
+                  class="form-input"
+                  placeholder="输入 TMDB API Key"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -183,14 +208,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Folder, FolderOpen, FileText, Brain, RefreshCw, Save } from 'lucide-vue-next'
+import { Folder, FolderOpen, FileText, Brain, Film, RefreshCw, Save } from 'lucide-vue-next'
 import { getConfig, setConfig, type Config } from '@/api/config'
 
 const fullConfig = ref<Config | null>(null)
 const configPaths = ref<Array<{ path: string }>>([])
 const loadingConfig = ref(false)
 const savingConfig = ref(false)
-const activeTab = ref<'folders' | 'log' | 'ai'>('folders')
+const activeTab = ref<'folders' | 'log' | 'ai' | 'tmdb'>('folders')
 const newPath = ref('')
 
 const loadConfig = async () => {
@@ -222,7 +247,11 @@ const removePath = (index: number) => {
 const updateConfigField = (section: keyof Config, field: string, value: any) => {
   if (!fullConfig.value) return
   if (section === 'folders') return
-  
+  if (section === 'tmdb') {
+    if (!fullConfig.value.tmdb) fullConfig.value.tmdb = { key: '' }
+    fullConfig.value.tmdb.key = value
+    return
+  }
   if (section in fullConfig.value) {
     ;(fullConfig.value[section] as any)[field] = value
   }
@@ -236,6 +265,7 @@ const saveConfig = async () => {
     const updatedConfig: Config = {
       log: fullConfig.value.log,
       ai: fullConfig.value.ai,
+      tmdb: fullConfig.value.tmdb ?? { key: '' },
       folders: configPaths.value,
     }
     await setConfig(updatedConfig)
@@ -342,6 +372,21 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.form-hint {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.form-hint a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.form-hint a:hover {
+  text-decoration: underline;
 }
 
 .form-section-title {

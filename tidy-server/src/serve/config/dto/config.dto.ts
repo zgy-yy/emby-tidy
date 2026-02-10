@@ -38,6 +38,12 @@ export class FolderDto {
     path: string;
 }
 
+export class TmdbConfigDto {
+    @IsString()
+    @IsNotEmpty()
+    key: string;
+}
+
 export class ConfigDto {
     @ValidateNested()
     @Type(() => LogConfigDto)
@@ -46,6 +52,11 @@ export class ConfigDto {
     @ValidateNested()
     @Type(() => AiConfigDto)
     ai: AiConfigDto;
+
+    @ValidateNested()
+    @Type(() => TmdbConfigDto)
+    @IsOptional()
+    tmdb?: TmdbConfigDto;
 
     @IsArray()
     @ValidateNested({ each: true })

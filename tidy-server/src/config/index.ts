@@ -13,11 +13,14 @@ export type Config = {
         baseUrl: string;
         apiKey: string;
         recursionLimit?: number; // Agent 递归限制，默认 1000
-    }
+    },
+    tmdb: {
+        key: string;
+    },
     folders: {
         path: string;
     }[]
-}
+} 
 
 // 根据环境变量判断是否为生产环境（Docker）
 // 生产环境：NODE_ENV=production 且存在 /app/config 目录
@@ -38,6 +41,9 @@ export function getConfig(): Config {
                 level: 'INFO',
                 toFile: true,
                 logDir: defaultLogDir,
+            },
+            tmdb: {
+                key: 'a7bed360d30feb5f61533fc032aa5582',
             },
             ai: {
                 model: 'deepseek-chat',

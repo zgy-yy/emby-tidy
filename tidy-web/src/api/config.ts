@@ -14,6 +14,9 @@ export interface Config {
     apiKey: string
     recursionLimit?: number
   }
+  tmdb: {
+    key: string
+  }
   folders: Array<{
     path: string
   }>

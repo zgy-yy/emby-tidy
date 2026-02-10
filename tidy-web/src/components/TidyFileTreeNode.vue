@@ -122,7 +122,7 @@ const handleTidy = (path: string) => {
 
 .node-item.selected {
   background-color: #e0e7ff;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid var(--color-primary);
 }
 
 .node-item.is-directory {
@@ -133,12 +133,12 @@ const handleTidy = (path: string) => {
   margin-right: 8px;
   display: flex;
   align-items: center;
-  color: #667eea;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
 .node-item.selected .node-icon {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .node-name {
@@ -151,7 +151,7 @@ const handleTidy = (path: string) => {
 }
 
 .node-item.selected .node-name {
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -188,7 +188,7 @@ const handleTidy = (path: string) => {
   width: 18px;
   height: 18px;
   border: 2px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

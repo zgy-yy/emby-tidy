@@ -34,6 +34,84 @@
   --color-text: var(--vt-c-text-light-1);
 
   --section-gap: 160px;
+
+  /* 春天主题：嫩绿 + 樱粉 */
+  --color-primary: #34d399;
+  --color-primary-hover: #10b981;
+  --color-spring-mint: #6ee7b7;
+  --color-spring-green: #10b981;
+  --color-spring-gradient-start: #6ee7b7;
+  --color-spring-gradient-end: #10b981;
+  /* 统一输入框尺寸 */
+  --input-padding: 0.625rem 1rem;
+  --input-font-size: 0.9375rem;
+  --input-min-height: 2.5rem;
+  --input-radius: 8px;
+  /* 统一按钮尺寸（与输入框同高） */
+  --btn-padding: 0.625rem 1.25rem;
+  --btn-font-size: 0.9375rem;
+  --btn-min-height: 2.5rem;
+  --btn-radius: 8px;
+}
+
+/* 全局统一：输入框 */
+.form-input {
+  padding: var(--input-padding);
+  font-size: var(--input-font-size);
+  min-height: var(--input-min-height);
+  border-radius: var(--input-radius);
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  transition: border-color 0.2s;
+  background: white;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+.form-input-readonly {
+  background: #f3f4f6;
+  cursor: default;
+  color: #4b5563;
+}
+.form-input-readonly:focus {
+  border-color: #e5e7eb;
+  box-shadow: none;
+}
+
+/* 全局统一：主按钮 */
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  padding: var(--btn-padding);
+  font-size: var(--btn-font-size);
+  min-height: var(--btn-min-height);
+  border-radius: var(--btn-radius);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  padding: var(--btn-padding);
+  font-size: var(--btn-font-size);
+  min-height: var(--btn-min-height);
+  border-radius: var(--btn-radius);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-danger:hover {
+  background: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {

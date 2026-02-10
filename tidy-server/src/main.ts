@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { logger } from '@/logger';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from '@/common/http-exception.filter';
 
 logger.info('Starting Tidy Server');
 
@@ -15,6 +16,7 @@ async function bootstrap() {
   if (production) {
     app.setGlobalPrefix('api');
   }
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // 自动删除不在 DTO 中的属性

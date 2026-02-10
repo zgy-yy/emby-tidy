@@ -60,7 +60,7 @@ import { Folder, Sparkles, Settings } from 'lucide-vue-next'
     transform: translateX(-50%) scaleX(0);
     width: 40px;
     height: 3px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, var(--color-spring-mint) 0%, var(--color-spring-green) 100%);
     border-radius: 0 0 3px 3px;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -84,7 +84,7 @@ import { Folder, Sparkles, Settings } from 'lucide-vue-next'
 .nav-item.active .nav-icon {
     transform: translateY(-2px) scale(1.1);
     opacity: 1;
-    color: #667eea;
+    color: var(--color-primary);
 }
 
 .nav-label {
@@ -95,11 +95,11 @@ import { Folder, Sparkles, Settings } from 'lucide-vue-next'
 }
 
 .nav-item.active {
-    color: #667eea;
+    color: var(--color-primary);
 }
 
 .nav-item.active .nav-label {
-    color: #667eea;
+    color: var(--color-primary);
     font-weight: 600;
 }
 

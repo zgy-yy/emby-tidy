@@ -79,7 +79,7 @@ async function toggleExpand() {
   margin-right: 6px;
   display: flex;
   align-items: center;
-  color: #667eea;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -99,7 +99,7 @@ async function toggleExpand() {
   width: 16px;
   height: 16px;
   border: 2px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

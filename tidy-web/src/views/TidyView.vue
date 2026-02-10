@@ -294,7 +294,7 @@ onMounted(() => {
 <style scoped>
 .tidy-view {
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-spring-gradient-start) 0%, var(--color-spring-gradient-end) 100%);
 }
 
 .page-header {
@@ -368,7 +368,7 @@ onMounted(() => {
 .card-icon {
   width: 24px;
   height: 24px;
-  color: #667eea;
+  color: var(--color-primary);
   flex-shrink: 0;
   stroke-width: 2;
 }
@@ -401,14 +401,14 @@ onMounted(() => {
 }
 
 .path-card:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   background: #f8f9ff;
   transform: translateY(-2px);
 }
 
 .path-card.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-spring-gradient-start) 0%, var(--color-spring-gradient-end) 100%);
   color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
@@ -424,7 +424,7 @@ onMounted(() => {
   border-radius: 12px;
   padding: 12px;
   transition: all 0.3s ease;
-  color: #667eea;
+  color: var(--color-primary);
   stroke-width: 2;
 }
 
@@ -481,7 +481,7 @@ onMounted(() => {
 }
 
 .selected-path-display .path-value {
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: 600;
   flex: 1;
   overflow: hidden;
@@ -526,7 +526,7 @@ onMounted(() => {
 
 .path-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -679,15 +679,8 @@ onMounted(() => {
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 .btn-large {
@@ -705,7 +698,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top-color: #667eea;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

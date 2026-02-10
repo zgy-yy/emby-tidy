@@ -51,18 +51,12 @@ export class FilesController {
             // 流结束
             res.end();
         } catch (error: any) {
-            // 如果还没有发送响应头，设置错误状态
+            const message = error?.message || '未知错误';
+            const body = { success: false, statusCode: 500, error: '流处理失败', message };
             if (!res.headersSent) {
-                res.status(500).json({
-                    error: '流处理失败',
-                    message: error?.message || '未知错误'
-                });
+                res.status(500).json(body);
             } else {
-                // 如果已经开始发送数据，发送错误信息后关闭
-                res.write(JSON.stringify({
-                    error: '流处理失败',
-                    message: error?.message || '未知错误'
-                }) + '\n');
+                res.write(JSON.stringify(body) + '\n');
                 res.end();
             }
         }

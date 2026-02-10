@@ -164,16 +164,7 @@
             <div v-show="activeTab === 'folders'" class="tab-content">
               <div class="form-group">
                 <label>配置路径列表</label>
-                <div class="path-input-group">
-                  <input
-                    v-model="newPath"
-                    type="text"
-                    placeholder="输入新路径"
-                    class="form-input"
-                    @keyup.enter="addPath"
-                  />
-                  <button @click="addPath" class="btn btn-primary">添加</button>
-                </div>
+                <AddPathInput v-model="newPath" @add="addPath" />
                 <div class="path-list-config">
                   <div
                     v-for="(folder, index) in configPaths"
@@ -181,9 +172,10 @@
                     class="path-item-config"
                   >
                     <input
-                      v-model="folder.path"
+                      :value="folder.path"
                       type="text"
-                      class="form-input"
+                      readonly
+                      class="form-input form-input-readonly"
                     />
                     <button
                       @click="removePath(index)"
@@ -294,6 +286,7 @@ import { ref, computed, onMounted } from 'vue'
 import { scanDirectory, tidyFile, type FileTree, type TidyChunk } from '@/api/files'
 import { getConfig, setConfig, type Config } from '@/api/config'
 import FileTreeNode from '@/components/FileTreeNode.vue'
+import AddPathInput from '@/components/AddPathInput.vue'
 
 const selectedPath = ref<string>('')
 const fileTree = ref<FileTree | null>(null)
@@ -480,7 +473,7 @@ onMounted(() => {
 
 <style scoped>
 .file-manager {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-spring-gradient-start) 0%, var(--color-spring-gradient-end) 100%);
   display: flex;
   flex-direction: column;
 }
@@ -510,17 +503,17 @@ onMounted(() => {
 
 .config-btn {
   padding: 0.5rem 1rem;
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--btn-radius);
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.3s;
 }
 
 .config-btn:hover {
-  background: #5568d3;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
 }
 
@@ -587,13 +580,13 @@ onMounted(() => {
 }
 
 .path-item:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   background: #f8f9ff;
 }
 
 .path-item.active {
-  border-color: #667eea;
-  background: #667eea;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
   color: white;
 }
 
@@ -629,13 +622,7 @@ onMounted(() => {
   transition: all 0.3s;
 }
 
-.btn-primary {
-  background: #667eea;
-  color: white;
-}
-
 .btn-primary:hover:not(:disabled) {
-  background: #5568d3;
   transform: translateY(-2px);
 }
 
@@ -654,12 +641,6 @@ onMounted(() => {
   color: white;
 }
 
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-}
 
 .btn:disabled {
   opacity: 0.6;
@@ -781,7 +762,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #e0e0e0;
-  border-top-color: #667eea;
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -896,20 +877,6 @@ onMounted(() => {
   color: #333;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  transition: border-color 0.3s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
 .path-input-group {
   display: flex;
   gap: 0.5rem;
@@ -930,6 +897,12 @@ onMounted(() => {
 
 .path-item-config .form-input {
   flex: 1;
+}
+
+.path-item-config .btn {
+  padding: var(--btn-padding);
+  font-size: var(--btn-font-size);
+  min-height: var(--btn-min-height);
 }
 
 /* 标签页样式 */
@@ -955,14 +928,15 @@ onMounted(() => {
 }
 
 .tab:hover {
-  color: #667eea;
-  background: #f8f9ff;
+  color: var(--color-primary);
+  background: #ecfdf5;
 }
 
 .tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
+  background: #ecfdf5;
 }
 
 .tab-content {

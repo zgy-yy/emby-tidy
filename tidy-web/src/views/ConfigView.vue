@@ -49,16 +49,7 @@
           <div v-show="activeTab === 'folders'" class="tab-content">
             <div class="form-section">
               <h3 class="form-section-title">配置路径列表</h3>
-              <div class="path-input-group">
-                <input
-                  v-model="newPath"
-                  type="text"
-                  placeholder="输入新路径"
-                  class="form-input"
-                  @keyup.enter="addPath"
-                />
-                <button @click="addPath" class="btn btn-primary">添加</button>
-              </div>
+              <AddPathInput v-model="newPath" @add="addPath" />
               <div class="path-list-config">
                 <div
                   v-for="(folder, index) in configPaths"
@@ -66,9 +57,10 @@
                   class="path-item-config"
                 >
                   <input
-                    v-model="folder.path"
+                    :value="folder.path"
                     type="text"
-                    class="form-input"
+                    readonly
+                    class="form-input form-input-readonly"
                   />
                   <button
                     @click="removePath(index)"
@@ -210,6 +202,7 @@
 import { ref, onMounted } from 'vue'
 import { Folder, FolderOpen, FileText, Brain, Film, RefreshCw, Save } from 'lucide-vue-next'
 import { getConfig, setConfig, type Config } from '@/api/config'
+import AddPathInput from '@/components/AddPathInput.vue'
 
 const fullConfig = ref<Config | null>(null)
 const configPaths = ref<Array<{ path: string }>>([])
@@ -288,7 +281,7 @@ onMounted(() => {
 <style scoped>
 .config-view {
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-spring-gradient-start) 0%, var(--color-spring-gradient-end) 100%);
 }
 
 .page-header {
@@ -353,15 +346,15 @@ onMounted(() => {
 }
 
 .tab:hover {
-  color: #667eea;
-  background: #f8f9ff;
+  color: var(--color-primary);
+  background: #ecfdf5;
 }
 
 .tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
-  background: #f8f9ff;
+  background: #ecfdf5;
 }
 
 .tab-content {
@@ -381,7 +374,7 @@ onMounted(() => {
 }
 
 .form-hint a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -425,22 +418,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.form-input {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
 .form-group select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
@@ -469,6 +446,12 @@ onMounted(() => {
 
 .path-item-config .form-input {
   flex: 1;
+}
+
+.path-item-config .btn {
+  padding: var(--btn-padding);
+  font-size: var(--btn-font-size);
+  min-height: var(--btn-min-height);
 }
 
 .empty-paths {
@@ -510,15 +493,8 @@ onMounted(() => {
   text-decoration: none;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 .btn-secondary {
@@ -529,13 +505,6 @@ onMounted(() => {
 .btn-secondary:hover:not(:disabled) {
   background: #4b5563;
   transform: translateY(-2px);
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
 }
 
 .btn-danger:hover {

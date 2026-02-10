@@ -52,6 +52,12 @@ export class WatchService {
             watcher.unwatch(directory);
             watcher.close();
             this.watchers.delete(directory);
+            logger.info(`取消监听目录: ${directory}`);
+        }
+        logger.info(`${directory} 未被监听或已取消监听`);
+        return {
+            success: true,
+            message: '取消监听目录成功',
         }
     }
     catWatchDirectories() {

@@ -71,10 +71,20 @@
             <FolderTree class="card-icon" />
             <h2 class="card-title">文件树</h2>
           </div>
-          <div class="file-count">{{ getFileCount(fileTree) }} 个文件</div>
+          <div class="card-header-right">
+            <span class="watch-hint">目录可点右侧图标监控</span>
+            <span class="file-count">{{ getFileCount(fileTree) }} 个文件</span>
+          </div>
         </div>
         <div class="tree-wrapper">
-          <FileTreeNode :node="fileTree" :level="0" :load-children="loadChildren" />
+          <FileTreeNode
+            :node="fileTree"
+            :level="0"
+            :load-children="loadChildren"
+            :watched-paths="watchedPaths"
+            :toggle-watch="toggleWatch"
+            :watch-loading="watchLoading"
+          />
         </div>
       </div>
 
@@ -91,6 +101,7 @@ import { ref, onMounted } from 'vue'
 import { Folder, FolderOpen, Search, FolderTree, FileText } from 'lucide-vue-next'
 import { scanDirectory, type FileTree } from '@/api/files'
 import { getConfig } from '@/api/config'
+import { getWatchDirectories, watchDirectory, unwatchDirectory } from '@/api/watch'
 import FileTreeNode from '@/components/FileTreeNode.vue'
 
 const currentPath = ref('')
@@ -99,6 +110,8 @@ const fileTree = ref<FileTree | null>(null)
 const scanning = ref(false)
 const configPaths = ref<Array<{ path: string }>>([])
 const loadingConfig = ref(false)
+const watchedPaths = ref<string[]>([])
+const watchLoading = ref(false)
 
 const getPathName = (path: string) => {
   const parts = path.split('/').filter(Boolean)
@@ -135,6 +148,35 @@ const loadChildren = async (dirPath: string): Promise<FileTree[]> => {
   return result.fileTree.children || []
 }
 
+/** 拉取当前监控目录列表 */
+const loadWatched = async () => {
+  try {
+    watchedPaths.value = await getWatchDirectories()
+  } catch (e) {
+    console.error('获取监控列表失败:', e)
+    watchedPaths.value = []
+  }
+}
+
+/** 点击监控：已监控则取消，未监控则添加 */
+const toggleWatch = async (path: string) => {
+  if (watchLoading.value) return
+  watchLoading.value = true
+  try {
+    if (watchedPaths.value.includes(path)) {
+      await unwatchDirectory(path)
+    } else {
+      await watchDirectory(path)
+    }
+    await loadWatched()
+  } catch (e) {
+    console.error('监控操作失败:', e)
+    alert('操作失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    watchLoading.value = false
+  }
+}
+
 const handleScan = async () => {
   const path = currentPath.value || selectedPath.value
   if (!path) {
@@ -146,6 +188,7 @@ const handleScan = async () => {
   try {
     const result = await scanDirectory(path, false)
     fileTree.value = result.fileTree
+    await loadWatched()
   } catch (error) {
     console.error('扫描失败:', error)
     alert('扫描失败: ' + (error instanceof Error ? error.message : String(error)))
@@ -156,6 +199,7 @@ const handleScan = async () => {
 
 onMounted(() => {
   loadConfig()
+  loadWatched()
 })
 </script>
 
@@ -234,6 +278,17 @@ onMounted(() => {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+}
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.watch-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 .file-count {

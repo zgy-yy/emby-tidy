@@ -13,9 +13,10 @@ export async function watchDirectory(path: string) {
 /**
  * 获取所有监听的目录
  */
-export async function getWatchDirectories() {
+export async function getWatchDirectories(): Promise<string[]> {
   const response = await get(`${API_BASE}/all`)
-  return response.data
+  const data = response.data
+  return Array.isArray(data) ? data : []
 }
 
 /**

@@ -7,9 +7,9 @@ import type { Response } from 'express';
 export class FilesController {
     constructor(private readonly filesService: FilesService) { }
 
-    @Get('scan')
-    scan(@Query() query: ScanDirectoryDto) {
-        return this.filesService.scanDirectory(query.directory, query.recursive);
+    @Post('scan')
+    scan(@Body() body: ScanDirectoryDto) {
+        return this.filesService.scanDirectory(body.directory, body.recursive);
     }
 
     @Delete()

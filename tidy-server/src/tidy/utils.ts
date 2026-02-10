@@ -9,8 +9,8 @@ export type FileTree = {
     children: FileTree[];
 }
 
-function screenFolder(directory: string, recursive: boolean = true) {
-    logger.debug(`开始扫描目录: ${directory}, 递归: ${recursive}`);
+function screenFolder(directory: string, recursive: boolean = false) {
+    logger.info(`开始扫描目录: ${directory}, 递归: ${recursive}`);
     if (!fs.existsSync(directory)) {
         logger.error(`目录不存在: ${directory}`);
         throw new Error(`Directory ${directory} does not exist`);
@@ -61,6 +61,7 @@ function screenFolder(directory: string, recursive: boolean = true) {
                 children: children,
             };
         }
+        logger.info(`扫描文件完成: ${currentPath}`);
         return {
             name: name,
             path: currentPath,

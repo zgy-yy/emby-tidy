@@ -8,8 +8,8 @@ import { logger } from '@/logger';
  */
 export const scanDirectory: any = tool(
     (input: { directory: string; recursive?: boolean }) => {
-        logger.info(`扫描目录: ${input.directory}, 递归: ${input.recursive ?? true}`);
-        const result = utils.screenFolder(input.directory, input.recursive ?? true);
+        logger.info(`扫描目录: ${input.directory}, 递归: ${input.recursive ?? false}`);
+        const result = utils.screenFolder(input.directory, input.recursive ?? false);
         // 计算文件总数
         function countFiles(tree: any): number {
             if (tree.type === 'file') {
@@ -32,7 +32,7 @@ export const scanDirectory: any = tool(
         description: "扫描指定目录中的所有文件（包括文件和子目录）。返回完整的文件树结构。注意：每个目录只扫描一次，扫描完成后根据结果决定下一步操作，不要重复扫描。",
         schema: z.object({
             directory: z.string().describe("要扫描的目录路径（可以是相对路径或绝对路径）"),
-            recursive: z.boolean().optional().describe("是否递归扫描子目录，默认为 true"),
+            recursive: z.boolean().optional().describe("是否递归扫描子目录，默认为 false（不递归）"),
         }),
     }
 );

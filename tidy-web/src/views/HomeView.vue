@@ -74,7 +74,7 @@
           <div class="file-count">{{ getFileCount(fileTree) }} 个文件</div>
         </div>
         <div class="tree-wrapper">
-          <FileTreeNode :node="fileTree" :level="0" />
+          <FileTreeNode :node="fileTree" :level="0" :load-children="loadChildren" />
         </div>
       </div>
 
@@ -129,6 +129,12 @@ const selectPath = (path: string) => {
   fileTree.value = null
 }
 
+/** 只扫描一层，用于一级一级展开 */
+const loadChildren = async (dirPath: string): Promise<FileTree[]> => {
+  const result = await scanDirectory(dirPath, false)
+  return result.fileTree.children || []
+}
+
 const handleScan = async () => {
   const path = currentPath.value || selectedPath.value
   if (!path) {
@@ -138,7 +144,7 @@ const handleScan = async () => {
 
   scanning.value = true
   try {
-    const result = await scanDirectory(path, true)
+    const result = await scanDirectory(path, false)
     fileTree.value = result.fileTree
   } catch (error) {
     console.error('扫描失败:', error)

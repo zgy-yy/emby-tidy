@@ -210,7 +210,7 @@ const scanPath = async (path: string) => {
   scanning.value = true
   fileTree.value = null
   try {
-    const result = await scanDirectory(path, true)
+    const result = await scanDirectory(path, false)
     fileTree.value = result.fileTree
   } catch (error) {
     console.error('扫描失败:', error)

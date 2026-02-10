@@ -6,7 +6,8 @@
       @click="toggleExpand"
     >
       <span class="node-icon">
-        <FolderOpen v-if="node.type === 'directory' && isExpanded" :size="16" />
+        <span v-if="node.type === 'directory' && loading" class="spinner-small"></span>
+        <FolderOpen v-else-if="node.type === 'directory' && isExpanded" :size="16" />
         <Folder v-else-if="node.type === 'directory'" :size="16" />
         <File v-else :size="16" />
       </span>
@@ -18,6 +19,7 @@
         :key="child.path"
         :node="child"
         :level="level + 1"
+        :load-children="loadChildren"
       />
     </div>
   </div>
@@ -31,13 +33,27 @@ import type { FileTree } from '@/api/files'
 const props = defineProps<{
   node: FileTree
   level: number
+  loadChildren?: (path: string) => Promise<FileTree[]>
 }>()
 
-const isExpanded = ref(props.level < 2) // 默认展开前两级
+const isExpanded = ref(props.level === 0)
+const loading = ref(false)
+const hasLoaded = ref(props.node.children.length > 0)
 
-const toggleExpand = () => {
-  if (props.node.type === 'directory') {
-    isExpanded.value = !isExpanded.value
+async function toggleExpand() {
+  if (props.node.type !== 'directory') return
+  isExpanded.value = !isExpanded.value
+  if (isExpanded.value && !hasLoaded.value && props.loadChildren) {
+    loading.value = true
+    try {
+      const children = await props.loadChildren(props.node.path)
+      props.node.children = children
+      hasLoaded.value = true
+    } catch (e) {
+      console.error('加载子目录失败:', e)
+    } finally {
+      loading.value = false
+    }
   }
 }
 </script>
@@ -77,5 +93,20 @@ const toggleExpand = () => {
 
 .node-children {
   margin-left: 0;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

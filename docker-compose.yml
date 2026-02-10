@@ -14,7 +14,7 @@ services:
       # 映射日志目录
       - ./config/logs:/app/logs
       # 映射媒体目录
-      - /Volumes/dav.2dland.cn/:/app/media
+      - rclone-2dland:/app/media
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -24,3 +24,16 @@ services:
 networks:
   emby-tidy-network:
     driver: bridge
+
+volumes:
+  rclone-2dland:
+    driver: rclone/docker-volume-rclone:arm64
+    driver_opts:
+      remote: ":webdav:/"
+      webdav_url: "https://dav.2dland.cn"
+      webdav_user: "zgy123"
+      webdav_pass: "IZ3TorAvvMTuYuPCe9CBI7MhJG9SzrDYyFVSRMs"
+      vfs_cache_mode: "full"
+      vfs_cache_max_size: "5G"
+      vfs_cache_max_age: "24h"
+      allow_other: "true"

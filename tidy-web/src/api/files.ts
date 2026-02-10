@@ -29,8 +29,8 @@ export interface TidyChunk {
 /**
  * 扫描目录
  */
-export async function scanDirectory(directory: string, recursive: boolean = true): Promise<ScanResult> {
-  const response = await get(`${API_BASE}/scan`, { directory, recursive })
+export async function scanDirectory(directory: string, recursive: boolean = false): Promise<ScanResult> {
+  const response = await post(`${API_BASE}/scan`, { directory, recursive })
   return response.data
 }
 

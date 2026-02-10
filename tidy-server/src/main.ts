@@ -16,7 +16,6 @@ async function bootstrap() {
   if (production) {
     app.setGlobalPrefix('api');
   }
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // 自动删除不在 DTO 中的属性

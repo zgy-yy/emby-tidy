@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
 export class FilesService {
     constructor() { }
 
-    scanDirectory(directory: string, recursive: boolean = true) {
+    scanDirectory(directory: string, recursive: boolean = false) {
         return utils.screenFolder(directory, recursive);
     }
 

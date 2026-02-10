@@ -70,6 +70,7 @@
             :node="fileTree"
             :level="0"
             :selected-path="currentPath"
+            :load-children="loadChildren"
             @select="handleTreeSelect"
             @tidy="handleTreeTidy"
           />
@@ -203,6 +204,12 @@ const selectPath = async (path: string) => {
   currentPath.value = path
   // 自动扫描选中的路径
   await scanPath(path)
+}
+
+/** 只扫描一层，用于目录展开加载子级 */
+const loadChildren = async (dirPath: string): Promise<FileTree[]> => {
+  const result = await scanDirectory(dirPath, false)
+  return result.fileTree.children || []
 }
 
 const scanPath = async (path: string) => {

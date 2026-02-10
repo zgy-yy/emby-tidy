@@ -72,7 +72,7 @@
             <span>扫描中...</span>
           </div>
           <div v-else-if="fileTree" class="tree-container">
-            <FileTreeNode :node="fileTree" :level="0" />
+            <FileTreeNode :node="fileTree" :level="0" :load-children="loadChildren" />
           </div>
           <div v-else class="empty-state">
             <p>请先选择路径并扫描目录</p>
@@ -400,6 +400,12 @@ const updateConfigField = (section: keyof Config, field: string, value: any) => 
   if (section in fullConfig.value) {
     ;(fullConfig.value[section] as any)[field] = value
   }
+}
+
+/** 只扫描一层，用于目录展开加载子级 */
+const loadChildren = async (dirPath: string): Promise<FileTree[]> => {
+  const result = await scanDirectory(dirPath, false)
+  return result.fileTree.children || []
 }
 
 // 扫描目录

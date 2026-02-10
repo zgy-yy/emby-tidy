@@ -10,7 +10,8 @@
       @click.stop="handleClick"
     >
       <span class="node-icon">
-        <FolderOpen v-if="node.type === 'directory' && isExpanded" :size="18" />
+        <span v-if="node.type === 'directory' && loading" class="spinner-small"></span>
+        <FolderOpen v-else-if="node.type === 'directory' && isExpanded" :size="18" />
         <Folder v-else-if="node.type === 'directory'" :size="18" />
         <File v-else :size="18" />
       </span>
@@ -31,6 +32,7 @@
         :node="child"
         :level="level + 1"
         :selected-path="selectedPath"
+        :load-children="loadChildren"
         @select="handleSelect"
         @tidy="handleTidy"
       />
@@ -47,6 +49,7 @@ const props = defineProps<{
   node: FileTree
   level: number
   selectedPath?: string
+  loadChildren?: (path: string) => Promise<FileTree[]>
 }>()
 
 const emit = defineEmits<{
@@ -54,24 +57,33 @@ const emit = defineEmits<{
   tidy: [path: string]
 }>()
 
-const isExpanded = ref(props.level < 1) // 默认只展开第一级
+const isExpanded = ref(props.level === 0)
+const loading = ref(false)
+const hasLoaded = ref(props.node.children.length > 0)
 
 const isSelected = computed(() => {
   return props.selectedPath === props.node.path
 })
 
-const toggleExpand = () => {
-  if (props.node.type === 'directory') {
-    isExpanded.value = !isExpanded.value
+async function loadOnExpand() {
+  if (props.node.type !== 'directory' || hasLoaded.value || !props.loadChildren) return
+  loading.value = true
+  try {
+    const children = await props.loadChildren(props.node.path)
+    props.node.children = children
+    hasLoaded.value = true
+  } catch (e) {
+    console.error('加载子目录失败:', e)
+  } finally {
+    loading.value = false
   }
 }
 
-const handleClick = () => {
-  // 点击节点时，先选中路径
+const handleClick = async () => {
   emit('select', props.node.path)
-  // 如果是目录，切换展开状态
   if (props.node.type === 'directory') {
-    toggleExpand()
+    isExpanded.value = !isExpanded.value
+    if (isExpanded.value) await loadOnExpand()
   }
 }
 
@@ -170,5 +182,20 @@ const handleTidy = (path: string) => {
 
 .node-children {
   margin-left: 0;
+}
+
+.spinner-small {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

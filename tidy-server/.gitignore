@@ -3,6 +3,8 @@
 /node_modules
 /build
 
+# Config
+config/
 # Logs
 logs
 *.log

@@ -48,6 +48,7 @@ const systemPrompt = `
 - 扫描完成后，根据结果决定下一步操作
 - 不要重复扫描同一个目录
 - 整理完成后立即结束任务
+- 只需要整理给定目录的内容，不要整理父目录的内容
 `;
 const agent = createAgent({
     model: model,

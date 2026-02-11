@@ -37,6 +37,13 @@
             <Film :size="18" />
             <span>TMDB</span>
           </button>
+          <button
+            :class="['tab', { active: activeTab === 'system' }]"
+            @click="activeTab = 'system'"
+          >
+            <Power :size="18" />
+            <span>系统</span>
+          </button>
         </div>
 
         <div v-if="loadingConfig" class="loading-state">
@@ -178,6 +185,24 @@
               </div>
             </div>
           </div>
+
+          <!-- 系统 -->
+          <div v-show="activeTab === 'system'" class="tab-content">
+            <div class="form-section">
+              <h3 class="form-section-title">系统操作</h3>
+              <p class="form-hint">重启后服务会由 Docker 或进程管理器自动拉起重启，请稍等几秒再刷新页面。</p>
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="restartLoading"
+                @click="handleRestart"
+              >
+                <span v-if="restartLoading" class="spinner-small"></span>
+                <RefreshCw v-else :size="18" />
+                {{ restartLoading ? '重启中...' : '重启服务' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -200,15 +225,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Folder, FolderOpen, FileText, Brain, Film, RefreshCw, Save } from 'lucide-vue-next'
+import { Folder, FolderOpen, FileText, Brain, Film, RefreshCw, Save, Power } from 'lucide-vue-next'
 import { getConfig, setConfig, type Config } from '@/api/config'
+import { restartServer } from '@/api/system'
+import { getApiErrorMessage } from '@/net'
 import AddPathInput from '@/components/AddPathInput.vue'
 
 const fullConfig = ref<Config | null>(null)
 const configPaths = ref<Array<{ path: string }>>([])
 const loadingConfig = ref(false)
 const savingConfig = ref(false)
-const activeTab = ref<'folders' | 'log' | 'ai' | 'tmdb'>('folders')
+const restartLoading = ref(false)
+const activeTab = ref<'folders' | 'log' | 'ai' | 'tmdb' | 'system'>('folders')
 const newPath = ref('')
 
 const loadConfig = async () => {
@@ -235,6 +263,20 @@ const addPath = () => {
 
 const removePath = (index: number) => {
   configPaths.value.splice(index, 1)
+}
+
+const handleRestart = async () => {
+  if (restartLoading.value) return
+  if (!confirm('确定要重启服务吗？重启后请稍等几秒再刷新页面。')) return
+  restartLoading.value = true
+  try {
+    await restartServer()
+    alert('重启指令已发送，服务即将重启，请稍等几秒后刷新页面。')
+  } catch (e) {
+    alert('重启失败: ' + getApiErrorMessage(e))
+  } finally {
+    restartLoading.value = false
+  }
 }
 
 const updateConfigField = (section: keyof Config, field: string, value: any) => {

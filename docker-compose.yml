@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   emby-tidy:
+    image: emby-tidy:latest
     build:
       context: .
       dockerfile: Dockerfile
     container_name: emby-tidy
     ports:
-      - "3000:3000"
+      - "8055:3000"
     volumes:
       # 映射配置目录
       - ./config:/app/config

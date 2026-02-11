@@ -21,7 +21,6 @@ export class WatchService {
             persistent: true,
             ignoreInitial: true,
             usePolling: true,
-            useFsEvents: false,
             interval: 5000,
             alwaysStat: true,
             awaitWriteFinish: {
